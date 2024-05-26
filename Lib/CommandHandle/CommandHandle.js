@@ -10,9 +10,10 @@ function Command({ cmd, desc, react, type, handler }) {
     commands.push({ cmd, desc, react, type, handler });
 }
 
-async function handleCommand(m, sock) {
+async function handleCommand(m, sock, delay) {
     try {
-        const textMessage = m.message?.conversation || m.message?.extendedTextMessage?.text || "";
+        const textMessage = m.message?.conversation.toLowerCase() || m.message?.extendedTextMessage?.text.toLowerCase() || "";
+        const OriginalText = m.message?.conversation || m.message?.extendedTextMessage?.text || "";
         const matchedCommand = commands.find(command => {
             if (Array.isArray(command.cmd)) {
                 return command.cmd.some(cmd => textMessage.startsWith(commandPrefix + cmd));
@@ -21,10 +22,16 @@ async function handleCommand(m, sock) {
             }
         });
         if (matchedCommand) {
-            await matchedCommand.handler(m, sock, commands);
+            await sock.presenceSubscribe(m.key.remoteJid);
+            await delay(250);
+            await sock.readMessages([m.key]);
             if (matchedCommand.react) {
                 await sock.sendMessage(m.key.remoteJid, { react: { text: matchedCommand.react, key: m.key } });
             }
+            await sock.sendPresenceUpdate('composing', m.key.remoteJid);
+            await delay(750);
+            await sock.sendPresenceUpdate('paused', m.key.remoteJid);
+            await matchedCommand.handler(m, sock, commands);
         }
     } catch (error) {
         console.error("An error occurred:", error);

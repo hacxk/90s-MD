@@ -5,7 +5,7 @@ module.exports = (Command) => {
         cmd: ['ping', 'test'], // Define multiple commands as an array
         desc: 'Check ping in ms',
         react: "💨", // Reaction emoji
-        type: 'botStatus',
+        type: 'BOT COMMANDS',
         handler: async (m, sock) => {
             const startTime = performance.now();
             

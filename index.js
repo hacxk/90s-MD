@@ -32,6 +32,8 @@ const startHacxkMd = async () => {
     const log = (message, emoji = '🔹') => console.log(chalk.blueBright(`${emoji} ${message}`));
     const errorLog = (message, emoji = '❌') => console.error(chalk.redBright(`${emoji} ${message}`));
 
+    const worktype = global.botSettings.botWorkMode[0].toLowerCase();
+
     log('Starting WhatsApp Bot...', '🚀');
     try {
         const { state, saveCreds } = await useMultiFileAuthState(__dirname + '/Session');
@@ -78,17 +80,13 @@ const startHacxkMd = async () => {
 
                 const wakeupmsg = await sock.sendMessage(sock.user.id, {
                     text: 
-`        
-    
-            *HACXK*
-                        
+`                         
 ❪👑❫ *Owner Name*: ${ownerName}
 ❪🔢❫ *Number*    : ${number}
 ❪🤖❫ *Bot Name*  : ${botName}
 ❪☎️❫ *Bot Number*: ${sock.user.id.split(':')[0]}
 ❪🔖❫ *Prefix*    : ${botPrefix}
-        
-            
+                   
 > All Credits Goes to Mr Zaid. If you can support our GitHub, we can improve our bot even more...
             `
                 });
@@ -121,6 +119,8 @@ const startHacxkMd = async () => {
                     switch (reason) {
                         case DisconnectReason.connectionClosed:
                             log('Connection closed!', '🔒');
+                            delay(1000)
+                            startHacxkMd()
                             break;
                         case DisconnectReason.connectionLost:
                             log('Connection lost from server!', '📡');
@@ -135,6 +135,8 @@ const startHacxkMd = async () => {
                             break;
                         case DisconnectReason.timedOut:
                             log('Connection timed out!', '⌛');
+                             delay(1000)
+                            startHacxkMd()
                             break;
                         default:
                             errorLog('Connection closed with bot. Trying to run again.', '⚠️');
@@ -162,31 +164,16 @@ const startHacxkMd = async () => {
             try {
                 const m = messages[0];
                 console.log(m)
-
-                if (type === 'append') {
-                    await sock.presenceSubscribe(m.key.remoteJid);
-                    await delay(550);
-                    await sock.sendPresenceUpdate('composing', m.key.remoteJid);
-                    await delay(2000);
-                    await sock.sendPresenceUpdate('paused', m.key.remoteJid);
-                } else {
-                    const worktype = global.botSettings.botWorkMode[0].toLowerCase();
-
                     if (worktype === 'private') {
                         if (m.key.remoteJid.endsWith('@s.whatsapp.net')) {
-                            // Mark the message as read
-                            await sock.readMessages([m.key]);
-                            await handleCommand(m, sock);
+                            await handleCommand(m, sock, delay);
                         } else {
                             return;
                         }
                     } else {
                         if (m.key.remoteJid.endsWith('@g.us') || m.key.remoteJid.endsWith('@s.whatsapp.net')) {
-                            // Mark the message as read
-                            await sock.readMessages([m.key]);
-                            await handleCommand(m, sock);
+                            await handleCommand(m, sock, delay);
                         }
-                    }
                 }
             } catch (error) {
                 console.log(error);
